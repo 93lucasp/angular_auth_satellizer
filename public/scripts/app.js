@@ -1,6 +1,6 @@
 angular
   .module('AuthSampleApp', [
-    'ui.router', 
+    'ui.router',
     'satellizer'
   ])
   .controller('MainController', MainController)
@@ -120,10 +120,18 @@ function HomeController ($http) {
     .then(function (response) {
       vm.posts = response.data;
     });
+
+  vm.createPost = function() {
+    $http.post('/api/posts', vm.new_post)
+      .then(function (response) {
+        vm.new_post = {};
+        vm.posts.push(response.data);
+      });
+  };
 }
 
-LoginController.$inject = ["Account", "$location"]; // minification protection
-function LoginController (Account, $location) {
+LoginController.$inject = ["$location", "Account"]; // minification protection
+function LoginController ($location, Account) {
   var vm = this;
   vm.new_user = {}; // form data
 
@@ -131,17 +139,14 @@ function LoginController (Account, $location) {
     Account
       .login(vm.new_user)
       .then(function(){
-         // TODO #4: clear sign up form
-         vm.new_user = {};
-         // TODO #5: redirect to '/profile'
-         $location.path('/profile'); 
-
-      });
+        vm.new_user = {}; // clear sign up form
+        $location.path('/profile'); // redirect to '/profile'
+      })
   };
 }
 
-SignupController.$inject = ["Account", "$location"]; // minification protection
-function SignupController (Account, $location) {
+SignupController.$inject = ["$location", "Account"]; // minification protection
+function SignupController ($location, Account) {
   var vm = this;
   vm.new_user = {}; // form data
 
@@ -150,33 +155,35 @@ function SignupController (Account, $location) {
       .signup(vm.new_user)
       .then(
         function (response) {
-          vm.new_user = {}; // TODO #9: clear sign up form
-          $location.path('/profile'); // TODO #10: redirect to '/profile'
+          vm.new_user = {}; // clear sign up form
+          $location.path('/profile'); // redirect to '/profile'
         }
       );
   };
 }
 
-LogoutController.$inject = ["Account", "$location"]; // minification protection
-function LogoutController (Account, $location) {
-  Account.logout();
-  // TODO #7: when the logout succeeds, redirect to the login page
-   $location.path('/login'); 
+LogoutController.$inject = ["$location", "Account"]; // minification protection
+function LogoutController ($location, Account) {
+  Account
+    .logout()
+    .then(function () {
+        $location.path('/login');
+    });
 }
 
 
 ProfileController.$inject = ["$location", "Account"]; // minification protection
 function ProfileController ($location, Account) {
- var vm = this;
- vm.new_profile = {}; // form data
+  var vm = this;
+  vm.new_profile = {}; // form data
 
- vm.updateProfile = function() {
-   Account
-     .updateProfile(vm.new_profile)
-     .then(function () {
-       vm.showEditForm = false;
-     });
- };
+  vm.updateProfile = function() {
+    Account
+      .updateProfile(vm.new_profile)
+      .then(function () {
+        vm.showEditForm = false;
+      });
+  };
 }
 
 //////////////
@@ -211,15 +218,13 @@ function Account($http, $q, $auth) {
     );
   }
 
-
   function login(userData) {
     return (
       $auth
         .login(userData) // login (https://github.com/sahat/satellizer#authloginuser-options)
         .then(
           function onSuccess(response) {
-            //TODO #3: set token (https://github.com/sahat/satellizer#authsettokentoken)
-            $auth.setToken(response.data.token);
+            $auth.setToken(response.data.token); // set token (https://github.com/sahat/satellizer#authsettokentoken)
           },
 
           function onError(error) {
@@ -230,18 +235,13 @@ function Account($http, $q, $auth) {
   }
 
   function logout() {
-    // returns a promise!!!
-    // TODO #6: logout the user by removing their jwt token (using satellizer)
     return (
       $auth
-        .logout() // delete token 
+        .logout() // delete token (https://github.com/sahat/satellizer#authlogout)
         .then(function() {
-          self.user = null; 
+          self.user = null;
         })
-      );
-    // Make sure to also wipe the user's data from the application:
-    // self.user = null;
-    // returns a promise!!!
+    );
   }
 
   function currentUser() {
